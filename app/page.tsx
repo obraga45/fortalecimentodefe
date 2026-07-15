@@ -67,6 +67,11 @@ export default function Home() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
+  const userDisplayName =
+    user?.user_metadata?.full_name ||
+    user?.user_metadata?.name ||
+    user?.email?.split("@")[0] ||
+    "Utilizador";
 
   const fetchPosts = useCallback(async () => {
     setLoading(true);
@@ -112,6 +117,12 @@ export default function Home() {
   };
 
   const handleLoginClick = () => {
+    if (user) {
+      setIsCreateFormOpen(false);
+      setIsLoginModalOpen(true);
+      return;
+    }
+
     setIsLoginModalOpen(true);
   };
 
@@ -188,7 +199,11 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar onLoginClick={handleLoginClick} />
+      <Navbar
+        onLoginClick={handleLoginClick}
+        isAuthenticated={Boolean(user)}
+        userLabel={userDisplayName}
+      />
       <Hero onShareClick={handleShareClick} />
       <TagFilters onTagChange={setActiveTag as any} />
 
