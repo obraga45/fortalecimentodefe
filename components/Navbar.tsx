@@ -4,14 +4,27 @@ interface NavbarProps {
   onLoginClick: () => void;
   isAuthenticated?: boolean;
   userLabel?: string;
+  searchQuery: string;
+  onSearchChange: (value: string) => void;
 }
 
-function SearchField({ className = "" }: { className?: string }) {
+function SearchField({
+  className = "",
+  value,
+  onChange,
+}: {
+  className?: string;
+  value: string;
+  onChange: (value: string) => void;
+}) {
   return (
     <div className={`relative ${className}`}>
       <input
         type="search"
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
         placeholder="Buscar status, versículos..."
+        aria-label="Buscar status e versículos"
         className="w-full min-h-[2.75rem] md:min-h-0 px-4 py-2 md:py-1.5 pl-10 bg-gray-100 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
       />
       <span
@@ -28,6 +41,8 @@ export default function Navbar({
   onLoginClick,
   isAuthenticated = false,
   userLabel = "Iniciar Sessão",
+  searchQuery,
+  onSearchChange,
 }: NavbarProps) {
   const compactUserLabel = userLabel.split(" ")[0];
 
@@ -52,7 +67,11 @@ export default function Navbar({
             </span>
           </div>
 
-          <SearchField className="hidden md:block flex-1 max-w-md mx-4 lg:mx-8" />
+          <SearchField
+            className="hidden md:block flex-1 max-w-md mx-4 lg:mx-8"
+            value={searchQuery}
+            onChange={onSearchChange}
+          />
 
           <button
             type="button"
@@ -75,7 +94,7 @@ export default function Navbar({
         </div>
 
         <div className="pb-3 md:hidden">
-          <SearchField />
+          <SearchField value={searchQuery} onChange={onSearchChange} />
         </div>
       </nav>
     </header>

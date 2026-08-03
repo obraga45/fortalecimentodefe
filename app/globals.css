@@ -37,20 +37,17 @@ body {
   }
 }
 
-/* Off-screen node for html-to-image; must be fully outside the viewport (not -200vw). */
+/* Clipped off-screen mount for html-to-image (never affects page layout). */
 .share-capture-root {
   position: fixed;
   top: 0;
-  left: -10000px;
-  z-index: -1;
-  pointer-events: none;
-  overflow: hidden;
-  width: 0;
-  height: 0;
-}
-
-.share-capture-root > * {
-  position: absolute;
-  top: 0;
   left: 0;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: -1;
 }

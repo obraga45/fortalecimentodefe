@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
 import TagFilters from "@/components/TagFilters";
@@ -10,6 +10,7 @@ import CreatePostForm from "@/components/CreatePostForm";
 import { supabase } from "@/src/utils/supabase";
 import { timeAgo } from "@/src/utils/timeAgo";
 import type { Post, PostWithTimeAgo } from "@/src/types";
+import { normalizeSearchText } from "@/src/utils/normalizeSearch";
 import { useAuth } from "@/src/hooks/useAuth";
 
 // Sample posts for demo purposes if Supabase isn't configured
@@ -64,6 +65,7 @@ export default function Home() {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isCreateFormOpen, setIsCreateFormOpen] = useState(false);
   const [activeTag, setActiveTag] = useState("Todos");
+  const [searchQuery, setSearchQuery] = useState("");
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
@@ -122,9 +124,24 @@ export default function Home() {
     time_ago: timeAgo(post.created_at),
   }));
 
-  const filteredPosts = activeTag === "Todos"
-    ? postsWithTimeAgo
-    : postsWithTimeAgo.filter((post) => post.tag === activeTag);
+  const filteredPosts = useMemo(() => {
+    const byTag =
+      activeTag === "Todos"
+        ? postsWithTimeAgo
+        : postsWithTimeAgo.filter((post) => post.tag === activeTag);
+
+    const query = normalizeSearchText(searchQuery);
+    if (!query) {
+      return byTag;
+    }
+
+    return byTag.filter((post) => {
+      const searchable = normalizeSearchText(
+        [post.content, post.reference ?? "", post.author_name, post.tag].join(" ")
+      );
+      return searchable.includes(query);
+    });
+  }, [activeTag, postsWithTimeAgo, searchQuery]);
 
   const handleShareClick = () => {
     if (user) {
@@ -223,6 +240,8 @@ export default function Home() {
         onLoginClick={handleLoginClick}
         isAuthenticated={Boolean(user)}
         userLabel={userDisplayName}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
       />
       <Hero onShareClick={handleShareClick} />
       <TagFilters onTagChange={setActiveTag as any} />
@@ -248,12 +267,16 @@ export default function Home() {
           </div>
         ) : filteredPosts.length === 0 ? (
           <div className="text-center py-12 px-4 rounded-2xl border border-dashed border-stone-200 bg-white/60">
-            <p className="text-gray-600 text-sm sm:text-base">Nenhum status nesta categoria.</p>
+            <p className="text-gray-600 text-sm sm:text-base">
+              {searchQuery.trim()
+                ? `Nenhum resultado para «${searchQuery.trim()}».`
+                : "Nenhum status nesta categoria."}
+            </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-5 lg:gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5 lg:gap-6 items-stretch">
             {filteredPosts.map((post) => (
-              <div key={post.id} className="min-w-0 max-w-full overflow-hidden">
+              <div key={post.id} className="min-w-0 w-full flex">
                 <PostCard post={post} onReactionUpdate={handleReactionUpdate} />
               </div>
             ))}

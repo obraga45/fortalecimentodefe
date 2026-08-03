@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { toPng } from "html-to-image";
 import type { Post, PostWithTimeAgo } from "@/src/types";
 
@@ -148,6 +149,7 @@ export default function PostCard({ post, onReactionUpdate }: PostCardProps) {
   const tweetShareRef = useRef<HTMLDivElement>(null);
   const [reactions, setReactions] = useState(post.reactions);
   const [isSharing, setIsSharing] = useState(false);
+  const [shareCaptureMounted, setShareCaptureMounted] = useState(false);
   const [avatarUnavailable, setAvatarUnavailable] = useState(false);
   const [shareAvatarDataUrl, setShareAvatarDataUrl] = useState<string | null>(null);
   const shareText = post.reference?.trim()
@@ -305,11 +307,19 @@ export default function PostCard({ post, onReactionUpdate }: PostCardProps) {
     }
   };
 
+  const waitForShareCaptureMount = () =>
+    new Promise<void>((resolve) => {
+      requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+    });
+
   const handleShare = async () => {
     if (!cardRef.current || isSharing) return;
     setIsSharing(true);
+    setShareCaptureMounted(true);
 
     try {
+      await waitForShareCaptureMount();
+
       // #region debug-point D:share-entry
       reportShareDebug("D", "handleShare started", {
         hasTweetShareRef: Boolean(tweetShareRef.current),
@@ -407,14 +417,94 @@ export default function PostCard({ post, onReactionUpdate }: PostCardProps) {
       }
     } finally {
       setIsSharing(false);
+      setShareCaptureMounted(false);
     }
   };
 
+  const shareCaptureTemplate = (
+    <div className="share-capture-root" aria-hidden="true">
+      <div
+        ref={tweetShareRef}
+        className="relative w-[1200px] min-h-[720px] bg-white px-[72px] pt-[64px] pb-[88px] text-black"
+      >
+        <div
+          className="mb-14"
+          style={{
+            display: "flex",
+            flexDirection: "row",
+            alignItems: "flex-start",
+            gap: 20,
+          }}
+        >
+          <ExportAvatarRing
+            name={post.author_name}
+            avatarUrl={shareAvatarDataUrl}
+            shouldShowAvatarImage={Boolean(shareAvatarDataUrl)}
+            onImageError={() => setShareAvatarDataUrl(null)}
+          />
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "flex-start",
+              flex: "1 1 auto",
+              minWidth: 0,
+              maxWidth: 980,
+            }}
+          >
+            <div
+              style={{
+                display: "block",
+                fontSize: 34,
+                fontWeight: 700,
+                lineHeight: "46px",
+                color: "#000000",
+                whiteSpace: "nowrap",
+                margin: 0,
+                padding: 0,
+              }}
+            >
+              {post.author_name}
+            </div>
+            <div
+              style={{
+                display: "block",
+                fontSize: 28,
+                fontWeight: 400,
+                lineHeight: "38px",
+                color: "#8E8E8E",
+                margin: 0,
+                padding: 0,
+                marginTop: 10,
+              }}
+            >
+              {authorHandle}
+            </div>
+          </div>
+        </div>
+
+        <p className={`font-serif font-semibold text-black break-words ${exportContentClassName}`}>
+          {post.content}
+        </p>
+
+        {post.reference ? (
+          <p className="mt-10 font-serif italic text-[#6B7280] text-[30px] leading-snug">
+            {post.reference}
+          </p>
+        ) : null}
+
+        <p className="absolute bottom-10 right-[72px] text-[22px] font-medium tracking-wide text-black/20">
+          {SITE_WATERMARK}
+        </p>
+      </div>
+    </div>
+  );
+
   return (
-    <div className="relative w-full min-w-0 max-w-full">
+    <div className="relative w-full min-w-0 max-w-full flex-1 flex flex-col">
       <div
         ref={cardRef}
-        className="bg-white rounded-2xl border border-stone-100 shadow-sm p-4 sm:p-5 w-full max-w-full overflow-hidden"
+        className="bg-white rounded-2xl border border-stone-100 shadow-sm p-4 sm:p-5 w-full max-w-full overflow-hidden flex-1 flex flex-col"
       >
         {/* Header */}
         <div className="flex items-start gap-3 mb-3">
@@ -525,82 +615,9 @@ export default function PostCard({ post, onReactionUpdate }: PostCardProps) {
         </div>
       </div>
 
-      <div className="share-capture-root" aria-hidden="true">
-        <div
-          ref={tweetShareRef}
-          className="relative w-[1200px] min-h-[720px] bg-white px-[72px] pt-[64px] pb-[88px] text-black"
-        >
-          <div
-            className="mb-14"
-            style={{
-              display: "flex",
-              flexDirection: "row",
-              alignItems: "flex-start",
-              gap: 20,
-            }}
-          >
-            <ExportAvatarRing
-              name={post.author_name}
-              avatarUrl={shareAvatarDataUrl}
-              shouldShowAvatarImage={Boolean(shareAvatarDataUrl)}
-              onImageError={() => setShareAvatarDataUrl(null)}
-            />
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "flex-start",
-                flex: "1 1 auto",
-                minWidth: 0,
-                maxWidth: 980,
-              }}
-            >
-              <div
-                style={{
-                  display: "block",
-                  fontSize: 34,
-                  fontWeight: 700,
-                  lineHeight: "46px",
-                  color: "#000000",
-                  whiteSpace: "nowrap",
-                  margin: 0,
-                  padding: 0,
-                }}
-              >
-                {post.author_name}
-              </div>
-              <div
-                style={{
-                  display: "block",
-                  fontSize: 28,
-                  fontWeight: 400,
-                  lineHeight: "38px",
-                  color: "#8E8E8E",
-                  margin: 0,
-                  padding: 0,
-                  marginTop: 10,
-                }}
-              >
-                {authorHandle}
-              </div>
-            </div>
-          </div>
-
-          <p className={`font-serif font-semibold text-black break-words ${exportContentClassName}`}>
-            {post.content}
-          </p>
-
-          {post.reference ? (
-            <p className="mt-10 font-serif italic text-[#6B7280] text-[30px] leading-snug">
-              {post.reference}
-            </p>
-          ) : null}
-
-          <p className="absolute bottom-10 right-[72px] text-[22px] font-medium tracking-wide text-black/20">
-            {SITE_WATERMARK}
-          </p>
-        </div>
-      </div>
+      {shareCaptureMounted && typeof document !== "undefined"
+        ? createPortal(shareCaptureTemplate, document.body)
+        : null}
     </div>
   );
 }
