@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Fortalecimento de Fé",
-  description: "Palavras que Fortalecem, Reflexões que Inspiram",
+  title: "Fortalecimento de Fé — Status para WhatsApp",
+  description:
+    "Versículos e reflexões de fé prontos para partilhar no teu status do WhatsApp. Escolhe, gera a imagem e publica.",
 };
 
 export default function RootLayout({

@@ -31,6 +31,53 @@ const reportShareDebug = (
   // #endregion
 };
 
+const SITE_WATERMARK = "fortalecimentodefe.pt";
+
+const formatAuthorHandle = (authorName: string) => {
+  const slug = authorName
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .replace(/\s+/g, ".")
+    .replace(/[^a-z0-9.]/g, "");
+
+  return slug ? `@${slug}` : "@comunidade";
+};
+
+function ExportAvatarRing({
+  name,
+  avatarUrl,
+  shouldShowAvatarImage,
+  onImageError,
+}: {
+  name: string;
+  avatarUrl: string | null;
+  shouldShowAvatarImage: boolean;
+  onImageError: () => void;
+}) {
+  return (
+    <div
+      className="shrink-0 rounded-full p-[3px]"
+      style={{
+        background:
+          "linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888)",
+      }}
+    >
+      <div className="rounded-full bg-white p-[4px]">
+        <ShareAvatar
+          name={name}
+          avatarUrl={avatarUrl}
+          shouldShowAvatarImage={shouldShowAvatarImage}
+          onImageError={onImageError}
+          imageClassName="w-[88px] h-[88px] rounded-full object-cover"
+          fallbackClassName="w-[88px] h-[88px] text-[30px] rounded-full"
+        />
+      </div>
+    </div>
+  );
+}
+
 const getTagColor = (tag: string) => {
   switch (tag) {
     case "Força":
@@ -98,37 +145,23 @@ interface PostCardProps {
 
 export default function PostCard({ post, onReactionUpdate }: PostCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
-  const statusShareRef = useRef<HTMLDivElement>(null);
-  const squareShareRef = useRef<HTMLDivElement>(null);
+  const tweetShareRef = useRef<HTMLDivElement>(null);
   const [reactions, setReactions] = useState(post.reactions);
   const [isSharing, setIsSharing] = useState(false);
   const [avatarUnavailable, setAvatarUnavailable] = useState(false);
   const [shareAvatarDataUrl, setShareAvatarDataUrl] = useState<string | null>(null);
-  const shareText = `${post.content}\n\n${post.reference}\n\nlido em fortalecimentodefe.pt`;
+  const shareText = post.reference?.trim()
+    ? `${post.content}\n\n${post.reference}\n\nlido em fortalecimentodefe.pt`
+    : `${post.content}\n\nlido em fortalecimentodefe.pt`;
   const shouldShowAvatarImage = Boolean(post.avatar_url) && !avatarUnavailable;
   const contentLength = post.content.trim().length;
-  const isShortStatusContent = contentLength <= 90;
-  const isMediumStatusContent = contentLength > 90 && contentLength <= 180;
-  const statusContainerClassName = isShortStatusContent
-    ? "py-[56px]"
-    : isMediumStatusContent
-      ? "py-[68px]"
-      : "flex-1 py-[84px]";
-  const statusBodyClassName = isShortStatusContent
-    ? "pt-2"
-    : isMediumStatusContent
-      ? "pt-4"
-      : "";
-  const statusQuoteSpacingClassName = isShortStatusContent ? "mb-4" : "mb-8";
-  const statusContentClassName = isShortStatusContent
-    ? "text-[84px] leading-[1.18]"
-    : isMediumStatusContent
-      ? "text-[78px] leading-[1.22]"
-      : "text-[76px] leading-[1.28]";
-  const statusReferenceClassName = isShortStatusContent
-    ? "text-[56px] mb-7"
-    : "text-[52px] mb-10";
-  const statusFooterSpacingClassName = isShortStatusContent ? "pt-7 mt-7" : "pt-10 mt-12";
+  const exportContentClassName =
+    contentLength <= 80
+      ? "text-[58px] leading-[1.18]"
+      : contentLength <= 160
+        ? "text-[48px] leading-[1.22]"
+        : "text-[40px] leading-[1.28]";
+  const authorHandle = formatAuthorHandle(post.author_name);
 
   useEffect(() => {
     const avatarUrl = post.avatar_url;
@@ -237,7 +270,7 @@ export default function PostCard({ post, onReactionUpdate }: PostCardProps) {
       const dataUrl = await toPng(node, {
         quality: 1,
         pixelRatio: 2,
-        backgroundColor: "#FDFBF7",
+        backgroundColor: "#FFFFFF",
         skipAutoScale: true,
         cacheBust: true,
         skipFonts: true,
@@ -277,30 +310,22 @@ export default function PostCard({ post, onReactionUpdate }: PostCardProps) {
     setIsSharing(true);
 
     try {
-      const isMobileViewport =
-        typeof window !== "undefined" &&
-        window.matchMedia("(max-width: 768px)").matches;
-
       // #region debug-point D:share-entry
       reportShareDebug("D", "handleShare started", {
-        isMobileViewport,
-        hasStatusShareRef: Boolean(statusShareRef.current),
-        hasSquareShareRef: Boolean(squareShareRef.current),
+        hasTweetShareRef: Boolean(tweetShareRef.current),
         avatarUrl: post.avatar_url,
         shouldShowAvatarImage,
       });
       // #endregion
 
       const shareAsset = await captureShareImage(
-        isMobileViewport ? statusShareRef.current : squareShareRef.current,
-        isMobileViewport ? "estado-fortalecimento.png" : "post-fe.png"
+        tweetShareRef.current,
+        "post-fortalecimento-fe.png"
       );
 
       if (!shareAsset) {
         // #region debug-point E:share-asset-null
-        reportShareDebug("E", "share asset unavailable", {
-          isMobileViewport,
-        });
+        reportShareDebug("E", "share asset unavailable", {});
         // #endregion
         throw new Error("Share asset unavailable");
       }
@@ -320,7 +345,7 @@ export default function PostCard({ post, onReactionUpdate }: PostCardProps) {
 
       if (canShareFiles) {
         await navigator.share({
-          title: "Fortalecimento de Fé",
+          title: "Status — Fortalecimento de Fé",
           text: shareText,
           files: [shareAsset.file],
         });
@@ -359,7 +384,7 @@ export default function PostCard({ post, onReactionUpdate }: PostCardProps) {
           });
           // #endregion
           await navigator.share({
-            title: "Fortalecimento de Fé",
+            title: "Status — Fortalecimento de Fé",
             text: shareText,
           });
         } else {
@@ -413,19 +438,23 @@ export default function PostCard({ post, onReactionUpdate }: PostCardProps) {
 
           {/* Author Info */}
           <div className="flex-1 min-w-0">
-            <div className="flex flex-col sm:flex-row sm:items-center gap-0.5 sm:gap-1 min-w-0">
-              <span className="text-slate-800 font-bold truncate text-base sm:text-base">
-                {post.author_name}
-              </span>
-              <div className="flex items-center gap-1 flex-wrap min-w-0">
+            <div className="flex flex-col gap-0.5 min-w-0">
+              <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0 min-w-0">
+                <span className="text-slate-800 font-bold truncate text-base">
+                  {post.author_name}
+                </span>
                 <span className="text-slate-400 text-sm">@comunidade</span>
-                <span className="text-slate-400 text-sm">• {post.time_ago}</span>
               </div>
+              <span className="text-slate-400 text-sm">• {post.time_ago}</span>
             </div>
           </div>
 
-          {/* Verified Badge */}
-          <span className="text-primary text-lg sm:text-xl flex-shrink-0">✝️</span>
+          <div
+            className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl bg-primary text-white text-xl sm:text-2xl flex items-center justify-center shadow-md shrink-0"
+            aria-hidden="true"
+          >
+            +
+          </div>
         </div>
 
         {/* Content */}
@@ -434,9 +463,11 @@ export default function PostCard({ post, onReactionUpdate }: PostCardProps) {
             {post.content}
           </p>
           <div className="flex flex-wrap items-center gap-2">
-            <span className="font-serif italic text-primary text-sm sm:text-base">
-              {post.reference}
-            </span>
+            {post.reference?.trim() ? (
+              <span className="font-serif italic text-primary text-sm sm:text-base">
+                {post.reference}
+              </span>
+            ) : null}
             <span
               className={`px-2 sm:px-3 py-1 rounded-full text-xs font-medium ${getTagColor(
                 post.tag
@@ -480,12 +511,15 @@ export default function PostCard({ post, onReactionUpdate }: PostCardProps) {
             disabled={isSharing}
             className="flex items-center justify-center sm:justify-start gap-2 text-slate-400 hover:text-primary transition-colors disabled:opacity-50 w-full sm:w-auto py-2 sm:py-0 rounded-xl bg-stone-50 sm:bg-transparent"
           >
-            <span className="text-lg sm:text-base">📤</span>
-            <span className="text-sm sm:text-sm">Partilhar</span>
+            <span className="text-lg sm:text-base" aria-hidden="true">
+              📤
+            </span>
+            <span className="text-sm">
+              {isSharing ? "A gerar imagem…" : "Partilhar"}
+            </span>
           </button>
         </div>
 
-        {/* Watermark (only visible in exported image) */}
         <div className="mt-3 pt-2 border-t border-stone-50 text-center text-xs text-slate-300">
           lido em fortalecimentodefe.pt
         </div>
@@ -493,143 +527,78 @@ export default function PostCard({ post, onReactionUpdate }: PostCardProps) {
 
       <div className="fixed left-[-200vw] top-0 pointer-events-none" aria-hidden="true">
         <div
-          ref={statusShareRef}
-          className="w-[1080px] h-[1920px] bg-[#FDFBF7] px-[72px] pt-[56px] pb-[72px] text-slate-800 flex flex-col"
+          ref={tweetShareRef}
+          className="relative w-[1200px] min-h-[720px] bg-white px-[72px] pt-[64px] pb-[88px] text-black"
         >
-          <div className="flex items-center justify-between mb-[28px]">
-            <div className="flex items-center gap-4">
-              <div className="h-16 w-16 rounded-2xl bg-primary/15 flex items-center justify-center text-primary text-3xl">
-                ✝️
-              </div>
-              <div>
-                <p className="text-[28px] uppercase tracking-[0.3em] text-secondary">
-                  Comunidade de Fé
-                </p>
-                <p className="text-[54px] font-serif font-semibold text-foreground">
-                  Fortalecimento de Fé
-                </p>
-              </div>
-            </div>
-            <span className={`px-8 py-3 rounded-full text-[32px] font-semibold ${getTagColor(post.tag)}`}>
-              {post.tag}
-            </span>
-          </div>
-
           <div
-            className={`rounded-[56px] border border-stone-100 bg-white px-[72px] shadow-[0_24px_80px_rgba(45,55,72,0.08)] flex flex-col ${statusContainerClassName}`}
+            className="mb-14"
+            style={{
+              display: "flex",
+              flexDirection: "row",
+              alignItems: "flex-start",
+              gap: 20,
+            }}
           >
-            <div className={statusBodyClassName}>
-              <div className={`${statusQuoteSpacingClassName} text-secondary text-[120px] leading-none`}>
-                "
+            <ExportAvatarRing
+              name={post.author_name}
+              avatarUrl={shareAvatarDataUrl}
+              shouldShowAvatarImage={Boolean(shareAvatarDataUrl)}
+              onImageError={() => setShareAvatarDataUrl(null)}
+            />
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "flex-start",
+                flex: "1 1 auto",
+                minWidth: 0,
+                maxWidth: 980,
+              }}
+            >
+              <div
+                style={{
+                  display: "block",
+                  fontSize: 34,
+                  fontWeight: 700,
+                  lineHeight: "46px",
+                  color: "#000000",
+                  whiteSpace: "nowrap",
+                  margin: 0,
+                  padding: 0,
+                }}
+              >
+                {post.author_name}
               </div>
-              <p className={`font-serif text-slate-800 break-words ${statusContentClassName}`}>
-                {post.content}
-              </p>
-            </div>
-
-            <div className={`${statusFooterSpacingClassName} border-t border-stone-100`}>
-              <p className={`font-serif italic text-primary ${statusReferenceClassName}`}>
-                {post.reference}
-              </p>
-
-              <div className="flex items-center gap-6">
-                <ShareAvatar
-                  name={post.author_name}
-                  avatarUrl={shareAvatarDataUrl}
-                  shouldShowAvatarImage={Boolean(shareAvatarDataUrl)}
-                  onImageError={() => setShareAvatarDataUrl(null)}
-                  imageClassName="w-24 h-24 rounded-[32px] object-cover shrink-0"
-                  fallbackClassName="w-24 h-24 text-[34px] rounded-[32px] shrink-0"
-                />
-                <div>
-                  <p className="text-[42px] font-semibold text-slate-800">{post.author_name}</p>
-                  <p className="text-[28px] text-slate-400">@comunidade • {post.time_ago}</p>
-                </div>
+              <div
+                style={{
+                  display: "block",
+                  fontSize: 28,
+                  fontWeight: 400,
+                  lineHeight: "38px",
+                  color: "#8E8E8E",
+                  margin: 0,
+                  padding: 0,
+                  marginTop: 10,
+                }}
+              >
+                {authorHandle}
               </div>
             </div>
           </div>
 
-          <div className="pt-10 text-center">
-            <p className="text-[28px] uppercase tracking-[0.28em] text-slate-400 mb-4">
-              lido em fortalecimentodefe.pt
+          <p className={`font-serif font-semibold text-black break-words ${exportContentClassName}`}>
+            {post.content}
+          </p>
+
+          {post.reference ? (
+            <p className="mt-10 font-serif italic text-[#6B7280] text-[30px] leading-snug">
+              {post.reference}
             </p>
-            <p className="text-[34px] font-medium text-primary">
-              Palavras que fortalecem. Reflexões que inspiram.
-            </p>
-          </div>
-        </div>
-      </div>
+          ) : null}
 
-      <div className="fixed left-[-200vw] top-0 pointer-events-none" aria-hidden="true">
-        <div
-          ref={squareShareRef}
-          className="w-[1568px] h-[1008px] bg-[#FDFBF7] p-[32px] text-slate-800"
-        >
-          <div className="h-full rounded-[44px] border border-stone-100 bg-white px-[46px] py-[42px] shadow-[0_24px_80px_rgba(45,55,72,0.08)] flex flex-col">
-            <div className="flex items-start justify-between gap-6 mb-12">
-              <div className="flex items-start gap-8 min-w-0">
-                <ShareAvatar
-                  name={post.author_name}
-                  avatarUrl={shareAvatarDataUrl}
-                  shouldShowAvatarImage={Boolean(shareAvatarDataUrl)}
-                  onImageError={() => setShareAvatarDataUrl(null)}
-                  imageClassName="w-[120px] h-[120px] rounded-full object-cover shrink-0"
-                  fallbackClassName="w-[120px] h-[120px] text-[38px] rounded-full shrink-0"
-                />
-                <div className="min-w-0">
-                  <div className="flex items-center gap-4 min-w-0">
-                    <p className="text-[52px] font-semibold text-slate-800 truncate">{post.author_name}</p>
-                    <p className="text-[30px] text-slate-400 truncate">@comunidade</p>
-                  </div>
-                  <p className="text-[30px] text-slate-400 mt-2">• {post.time_ago}</p>
-                </div>
-              </div>
-              <div className="h-[68px] w-[68px] rounded-[16px] bg-primary text-white text-[44px] flex items-center justify-center shadow-[0_8px_24px_rgba(95,138,117,0.28)] shrink-0">
-                +
-              </div>
-            </div>
-
-            <div className="mb-10">
-              <p className="font-serif text-[66px] leading-[1.15] text-slate-800 break-words mb-8">
-                {post.content}
-              </p>
-              <div className="flex items-center gap-4">
-                <p className="font-serif italic text-primary text-[42px]">
-                  {post.reference}
-                </p>
-                <span className={`px-7 py-3 rounded-full text-[26px] font-semibold ${getTagColor(post.tag)}`}>
-                  {post.tag}
-                </span>
-              </div>
-            </div>
-
-            <div className="mt-auto pt-8 border-t border-stone-100">
-              <div className="flex items-center justify-between mb-10 text-slate-400">
-                <div className="flex items-center gap-10">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[34px]">🙏</span>
-                    <span className="text-[28px]">{reactions.amen}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-[34px]">🤍</span>
-                    <span className="text-[28px]">{reactions.touched}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-[34px]">✨</span>
-                    <span className="text-[28px]">{reactions.inspired}</span>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 text-[28px]">
-                  <span className="text-[34px]">📤</span>
-                  <span>Partilhar</span>
-                </div>
-              </div>
-
-              <p className="text-[22px] text-center text-slate-300">
-                lido em fortalecimentodefe.pt
-              </p>
-            </div>
-          </div>
+          <p className="absolute bottom-10 right-[72px] text-[22px] font-medium tracking-wide text-black/20">
+            {SITE_WATERMARK}
+          </p>
         </div>
       </div>
     </div>

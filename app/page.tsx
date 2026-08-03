@@ -73,25 +73,43 @@ export default function Home() {
     user?.email?.split("@")[0] ||
     "Utilizador";
 
-  const fetchPosts = useCallback(async () => {
-    setLoading(true);
+  const fetchPosts = useCallback(async (options?: { showLoading?: boolean }) => {
+    const showLoading = options?.showLoading ?? true;
+    if (showLoading) {
+      setLoading(true);
+    }
     try {
-      // Try fetching from Supabase
       const { data, error } = await supabase
         .from("posts")
         .select("*")
         .order("created_at", { ascending: false });
 
-      if (error || !data || data.length === 0) {
-        // If Supabase fails or no data, use sample posts
+      if (error) {
+        throw error;
+      }
+
+      if (!data || data.length === 0) {
         setPosts(samplePosts);
       } else {
-        setPosts(data as unknown as Post[]);
+        setPosts(
+          data.map((row) => {
+            const post = row as Post;
+            return {
+              ...post,
+              id: String(post.id),
+              reference: post.reference?.trim() ? post.reference : null,
+            };
+          })
+        );
       }
     } catch {
-      setPosts(samplePosts);
+      if (showLoading) {
+        setPosts(samplePosts);
+      }
     } finally {
-      setLoading(false);
+      if (showLoading) {
+        setLoading(false);
+      }
     }
   }, []);
 
@@ -130,51 +148,53 @@ export default function Home() {
     setIsLoginModalOpen(false);
   };
 
-  const handleCreatePostSubmit = async (data: Omit<Post, "id" | "reactions" | "time_ago" | "created_at" | "author_id">) => {
-    try {
-      if (user) {
-        // Insert into Supabase
-        const { data: insertedPost, error } = await supabase
-          .from("posts")
-          .insert({
-            content: data.content,
-            reference: data.reference,
-            tag: data.tag,
-            author_name: data.author_name,
-            author_id: user.id,
-            avatar_url: data.avatar_url,
-            reactions: { amen: 0, touched: 0, inspired: 0 },
-          })
-          .select()
-          .single();
+  const handleCreatePostSubmit = async (
+    data: Omit<Post, "id" | "reactions" | "time_ago" | "created_at" | "author_id">
+  ) => {
+    const referenceValue = data.reference?.trim() || null;
 
-        if (!error && insertedPost) {
-          setPosts([insertedPost as unknown as Post, ...posts]);
-        }
-      } else {
-        // Demo mode: add sample post
-        const newPost: Post = {
-          id: Date.now().toString(),
-          created_at: new Date().toISOString(),
-          ...data,
-          author_id: "demo-new",
+    const insertPost = async (reference: string | null) => {
+      return supabase
+        .from("posts")
+        .insert({
+          content: data.content,
+          reference,
+          tag: data.tag,
+          author_name: data.author_name,
+          author_id: user!.id,
+          avatar_url: data.avatar_url,
           reactions: { amen: 0, touched: 0, inspired: 0 },
-        };
-        setPosts([newPost, ...posts]);
+        })
+        .select()
+        .single();
+    };
+
+    if (user) {
+      let { error } = await insertPost(referenceValue);
+
+      if (error && referenceValue === null) {
+        ({ error } = await insertPost(""));
       }
+
+      if (error) {
+        throw error;
+      }
+
+      await fetchPosts({ showLoading: false });
       setIsCreateFormOpen(false);
-    } catch {
-      // Fallback to demo mode
-      const newPost: Post = {
-        id: Date.now().toString(),
-        created_at: new Date().toISOString(),
-        ...data,
-        author_id: "demo-new",
-        reactions: { amen: 0, touched: 0, inspired: 0 },
-      };
-      setPosts([newPost, ...posts]);
-      setIsCreateFormOpen(false);
+      return;
     }
+
+    const newPost: Post = {
+      id: Date.now().toString(),
+      created_at: new Date().toISOString(),
+      ...data,
+      reference: referenceValue,
+      author_id: "demo-new",
+      reactions: { amen: 0, touched: 0, inspired: 0 },
+    };
+    setPosts((prev) => [newPost, ...prev]);
+    setIsCreateFormOpen(false);
   };
 
   const handleReactionUpdate = async (postId: string, newReactions: Post["reactions"]) => {
@@ -208,6 +228,20 @@ export default function Home() {
       <TagFilters onTagChange={setActiveTag as any} />
 
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pb-16">
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2 mb-6 sm:mb-8 px-1">
+          <div>
+            <h2 className="font-serif text-2xl sm:text-3xl font-bold text-foreground">
+              Galeria de status
+            </h2>
+            <p className="text-gray-600 text-sm sm:text-base mt-1 max-w-xl">
+              Toca em «Partilhar» para gerar a imagem do cartão e enviar no WhatsApp.
+            </p>
+          </div>
+          <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-stone-100 px-3 py-1.5 text-xs font-medium text-slate-600">
+            <span aria-hidden="true">🖼️</span>
+            Cartão minimal
+          </span>
+        </div>
         {loading ? (
           <div className="text-center py-12">
             <p className="text-gray-500">Carregando...</p>

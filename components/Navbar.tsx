@@ -19,11 +19,16 @@ export default function Navbar({
         <div className="flex items-center justify-between h-16 sm:h-16 gap-3">
           <div className="flex items-center gap-2 sm:gap-2 min-w-0">
             <span className="text-primary text-xl sm:text-2xl shrink-0">✝️</span>
-            <span className="font-serif text-sm sm:text-xl font-semibold text-foreground hidden sm:inline truncate">
-              Fortalecimento de Fé
-            </span>
+            <div className="hidden sm:flex flex-col min-w-0">
+              <span className="font-serif text-xl font-semibold text-foreground truncate leading-tight">
+                Fortalecimento de Fé
+              </span>
+              <span className="text-[10px] uppercase tracking-[0.2em] text-gray-500 truncate">
+                Status WhatsApp
+              </span>
+            </div>
             <span className="font-serif text-[1.15rem] font-semibold text-foreground sm:hidden truncate">
-              Fé
+              Status Fé
             </span>
           </div>
           
@@ -31,7 +36,7 @@ export default function Navbar({
             <div className="relative">
               <input
                 type="text"
-                placeholder="Buscar versículos, reflexões..."
+                placeholder="Buscar status, versículos..."
                 className="w-full px-3 sm:px-4 py-1.5 sm:py-2 pl-8 sm:pl-10 bg-gray-100 rounded-full text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
               />
               <span className="absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">🔍</span>

@@ -81,10 +81,10 @@ export default function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClo
       <div className="bg-white rounded-t-2xl sm:rounded-3xl shadow-2xl max-w-md w-full p-5 sm:p-8 transform transition-all border border-stone-100">
         <div className="text-center mb-5 sm:mb-7">
           <h2 className="text-xl sm:text-2xl font-serif font-bold text-foreground mb-2">
-            Acesse para Partilhar
+            Entrar para publicar status
           </h2>
           <p className="text-gray-600 text-xs sm:text-sm leading-relaxed">
-            Para manter a nossa comunidade segura e livre de spam, pedimos que se autentique antes de publicar.
+            Autentica-te para publicares na galeria e partilhares status de fé no WhatsApp com a comunidade.
           </p>
         </div>
 

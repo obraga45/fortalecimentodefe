@@ -11,47 +11,81 @@ export default function CreatePostForm({
   onSubmit,
 }: {
   onClose: () => void;
-  onSubmit: (data: Omit<Post, "id" | "reactions" | "time_ago" | "created_at" | "author_id">) => void;
+  onSubmit: (
+    data: Omit<Post, "id" | "reactions" | "time_ago" | "created_at" | "author_id">
+  ) => Promise<void>;
 }) {
   const [content, setContent] = useState("");
   const [reference, setReference] = useState("");
   const [tag, setTag] = useState<typeof tags[number]>("Força");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const { user } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
 
-    // Get current user data (with demo fallback)
+    setSubmitError(null);
+    setIsSubmitting(true);
+
     const author_name = user
       ? user.user_metadata?.full_name || "Comunidade"
       : "Usuário Demo";
-    const avatar_url = user
-      ? user.user_metadata?.avatar_url || null
-      : null;
+    const avatar_url = user ? user.user_metadata?.avatar_url || null : null;
 
-    onSubmit({
-      content,
-      reference: reference || null,
-      tag,
-      author_name,
-      avatar_url,
-    });
+    try {
+      await onSubmit({
+        content: content.trim(),
+        reference: reference.trim() || null,
+        tag,
+        author_name,
+        avatar_url,
+      });
+    } catch {
+      setSubmitError("Não foi possível publicar. Verifica a ligação e tenta outra vez.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
     <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-3 sm:p-4 bg-black/40 backdrop-blur-sm">
       <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl max-w-lg w-full p-5 sm:p-8">
-        <div className="flex items-center justify-between mb-4 sm:mb-6">
-          <h2 className="text-xl sm:text-2xl font-serif font-bold text-slate-800">
-            Partilhar uma Reflexão
-          </h2>
+        <div className="flex items-start justify-between gap-3 mb-4 sm:mb-6">
+          <div>
+            <h2 className="text-xl sm:text-2xl font-serif font-bold text-slate-800">
+              Novo status de fé
+            </h2>
+            <p className="text-sm text-gray-500 mt-1 max-w-sm">
+              O que publicares aqui fica na galeria e pode ser partilhado como imagem de status no WhatsApp.
+            </p>
+          </div>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 text-2xl"
+            disabled={isSubmitting}
+            className="text-slate-400 hover:text-slate-600 text-2xl disabled:opacity-40"
           >
             ✕
           </button>
         </div>
+
+        {isSubmitting ? (
+          <div
+            className="mb-6 flex items-center gap-3 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm text-primary"
+            role="status"
+            aria-live="polite"
+          >
+            <span className="inline-block h-5 w-5 animate-spin rounded-full border-2 border-primary/30 border-t-primary" />
+            A publicar o teu status…
+          </div>
+        ) : null}
+
+        {submitError ? (
+          <p className="mb-4 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {submitError}
+          </p>
+        ) : null}
 
         <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
           <div>
@@ -64,6 +98,7 @@ export default function CreatePostForm({
               className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none h-28 sm:h-32 text-sm"
               placeholder="Escreva o versículo ou a reflexão que deseja partilhar..."
               required
+              disabled={isSubmitting}
             />
           </div>
 
@@ -77,6 +112,7 @@ export default function CreatePostForm({
               onChange={(e) => setReference(e.target.value)}
               className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm"
               placeholder="Digite a referência bíblica ou deixe em branco"
+              disabled={isSubmitting}
             />
           </div>
 
@@ -90,6 +126,7 @@ export default function CreatePostForm({
                   key={t}
                   type="button"
                   onClick={() => setTag(t)}
+                  disabled={isSubmitting}
                   className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium transition-all ${
                     tag === t
                       ? "bg-primary text-white"
@@ -106,15 +143,24 @@ export default function CreatePostForm({
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-2.5 sm:py-3 border border-stone-200 rounded-xl text-slate-700 font-medium hover:bg-stone-50 transition-colors text-sm"
+              disabled={isSubmitting}
+              className="flex-1 px-4 py-2.5 sm:py-3 border border-stone-200 rounded-xl text-slate-700 font-medium hover:bg-stone-50 transition-colors text-sm disabled:opacity-50"
             >
               Cancelar
             </button>
             <button
               type="submit"
-              className="flex-1 px-4 py-2.5 sm:py-3 bg-primary text-white rounded-xl font-medium hover:bg-primary/90 transition-colors text-sm"
+              disabled={isSubmitting || !content.trim()}
+              className="flex-1 px-4 py-2.5 sm:py-3 bg-primary text-white rounded-xl font-medium hover:bg-primary/90 transition-colors text-sm disabled:opacity-70 inline-flex items-center justify-center gap-2"
             >
-              Publicar
+              {isSubmitting ? (
+                <>
+                  <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+                  A publicar…
+                </>
+              ) : (
+                "Publicar na galeria"
+              )}
             </button>
           </div>
         </form>
