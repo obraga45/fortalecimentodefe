@@ -483,7 +483,9 @@ export default function PostCard({ post, onReactionUpdate }: PostCardProps) {
           </div>
         </div>
 
-        <p className={`font-serif font-semibold text-black break-words ${exportContentClassName}`}>
+        <p
+          className={`font-serif font-semibold text-black break-words whitespace-normal [overflow-wrap:anywhere] ${exportContentClassName}`}
+        >
           {post.content}
         </p>
 

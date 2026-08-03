@@ -1,59 +1,109 @@
 # Produção (Vercel + Supabase + OAuth)
 
+Domínio de produção: **https://www.fortalecimentodefe.pt**  
+Project ref Supabase: **aapqfhwnkdiupqolnbma**
+
+---
+
 ## 1. Variáveis na Vercel
 
-No projeto Vercel: **Settings → Environment Variables**.
-
-Adiciona para **Production** (e **Preview**, se quiseres login nos previews):
+**Settings → Environment Variables** (Production + Preview, se quiseres):
 
 | Nome | Valor |
 |------|--------|
-| `NEXT_PUBLIC_SUPABASE_URL` | URL do projeto em Supabase → Settings → API |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Chave **anon** `public` (mesma página) |
+| `NEXT_PUBLIC_SUPABASE_URL` | `https://aapqfhwnkdiupqolnbma.supabase.co` |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | igual ao `.env.local` (anon public) |
 
-Copia os mesmos valores do teu `.env.local` local.
+Guardar → **Deployments → Redeploy**.
 
-Depois de gravar: **Deployments → Redeploy** o último deployment.
-
----
-
-## 2. URLs no Supabase (obrigatório para login em produção)
-
-Supabase Dashboard → teu projeto → **Authentication → URL Configuration**
-
-- **Site URL:** `https://fortalecimentodefe.pt` (ou o domínio final)
-- **Redirect URLs:**
-  - `https://fortalecimentodefe.pt/**`
-  - `https://www.fortalecimentodefe.pt/**` (se usares `www`)
-  - `https://*.vercel.app/**` (opcional, previews)
+(O Google/Facebook **não** entram na Vercel — ficam no Supabase + consolas Google/Meta.)
 
 ---
 
-## 3. Google OAuth
+## 2. Supabase — URL Configuration
 
-**Supabase:** Authentication → Providers → Google → Client ID + Secret
+**Authentication → URL Configuration**
 
-**Google Cloud:** OAuth client (Web)
+- **Site URL:** `https://www.fortalecimentodefe.pt`
+- **Redirect URLs** (mantém localhost se ainda desenvolves localmente):
 
-- **Redirect URI:** `https://SEU_PROJECT_REF.supabase.co/auth/v1/callback`
-- **JavaScript origins:** `https://fortalecimentodefe.pt`, `https://SEU_PROJECT_REF.supabase.co`
+```
+https://www.fortalecimentodefe.pt/**
+https://fortalecimentodefe.pt/**
+http://localhost:3000/**
+https://*.vercel.app/**
+```
 
----
-
-## 4. Facebook OAuth
-
-**Supabase:** Authentication → Providers → Facebook → App ID + Secret
-
-**Meta:** Facebook Login → Valid OAuth Redirect URIs:
-
-- `https://SEU_PROJECT_REF.supabase.co/auth/v1/callback`
-
-App em modo **Live** para utilizadores reais.
+Inclui **com e sem `www`** para quem entrar pelo domínio raiz.
 
 ---
 
-## 5. Testar
+## 3. Google Cloud (mesmo client que já usavas no localhost)
 
-Janela anónima → Entrar → Google/Facebook → voltar autenticado.
+**APIs & Services → Credentials → OAuth 2.0 Client (Web)**
 
-Credenciais Google/Facebook ficam no **Supabase**, não na Vercel.
+**Authorized JavaScript origins** — adiciona (não removas `http://localhost:3000`):
+
+```
+https://www.fortalecimentodefe.pt
+https://fortalecimentodefe.pt
+https://aapqfhwnkdiupqolnbma.supabase.co
+```
+
+**Authorized redirect URIs** — deve existir **só** (igual em local e produção):
+
+```
+https://aapqfhwnkdiupqolnbma.supabase.co/auth/v1/callback
+```
+
+No **Supabase → Authentication → Providers → Google**, Client ID/Secret continuam os mesmos.
+
+---
+
+## 4. Facebook / Meta (mesma app)
+
+**Facebook Login → Settings → Valid OAuth Redirect URIs:**
+
+```
+https://aapqfhwnkdiupqolnbma.supabase.co/auth/v1/callback
+```
+
+**Settings → Basic → App Domains:**
+
+```
+fortalecimentodefe.pt
+www.fortalecimentodefe.pt
+```
+
+**Site URL** (Basic): `https://www.fortalecimentodefe.pt`
+
+Para utilizadores reais: app em modo **Live** (não só Development).
+
+Supabase → Providers → Facebook: mesmos App ID / Secret.
+
+---
+
+## 5. Vercel + my.dominios
+
+- Domínio principal na Vercel: `www.fortalecimentodefe.pt` (como indicaste).
+- Recomendado: redireccionar `fortalecimentodefe.pt` → `www` (Vercel → Domains → redirect).
+
+---
+
+## 6. Testar
+
+1. Janela anónima → `https://www.fortalecimentodefe.pt`
+2. **Entrar** → Google ou Facebook
+3. Deves voltar a `https://www.fortalecimentodefe.pt` com sessão (nome no botão)
+
+| Erro | O que corrigir |
+|------|----------------|
+| `redirect_uri_mismatch` | Redirect URI Google/Facebook = callback Supabase acima |
+| Login abre e fecha sem sessão | Redirect URLs no Supabase (secção 2) |
+| Site sem posts / auth estranho | Env vars Vercel + redeploy |
+
+---
+
+## Localhost vs produção
+
+Como Google/Facebook já funcionavam em `localhost`, em geral **só faltam** as URLs de produção (secções 2 e 3) e as env vars na Vercel. Não precisas de criar novos clients OAuth.
