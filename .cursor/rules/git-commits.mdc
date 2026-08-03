@@ -1,0 +1,11 @@
+---
+description: Git commit message standards for this repo
+alwaysApply: true
+---
+
+# Git commits
+
+When creating git commits for this project:
+
+- Never add `Co-authored-by: Cursor <cursoragent@cursor.com>` or any other Co-authored-by trailer unless the user explicitly asks for it.
+- Use only the commit message the user requested or a concise summary of the change.
