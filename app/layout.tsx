@@ -7,6 +7,12 @@ export const metadata: Metadata = {
     "Versículos e reflexões de fé prontos para partilhar no teu status do WhatsApp. Escolhe, gera a imagem e publica.",
 };
 
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover" as const,
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -30,7 +36,7 @@ export default function RootLayout({
           `}
         </style>
       </head>
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col overflow-x-hidden">{children}</body>
     </html>
   );
 }

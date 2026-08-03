@@ -75,10 +75,10 @@ export default function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClo
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-3 sm:p-4 bg-black/40 backdrop-blur-sm"
+      className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/40 backdrop-blur-sm"
       onClick={handleBackdropClick}
     >
-      <div className="bg-white rounded-t-2xl sm:rounded-3xl shadow-2xl max-w-md w-full p-5 sm:p-8 transform transition-all border border-stone-100">
+      <div className="bg-white rounded-t-2xl sm:rounded-3xl shadow-2xl max-w-md w-full max-h-[92dvh] sm:max-h-none overflow-y-auto p-5 sm:p-8 pb-[max(1.25rem,env(safe-area-inset-bottom))] transform transition-all border border-stone-100">
         <div className="text-center mb-5 sm:mb-7">
           <h2 className="text-xl sm:text-2xl font-serif font-bold text-foreground mb-2">
             Entrar para publicar status

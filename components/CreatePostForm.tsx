@@ -50,8 +50,8 @@ export default function CreatePostForm({
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-3 sm:p-4 bg-black/40 backdrop-blur-sm">
-      <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl max-w-lg w-full p-5 sm:p-8">
+    <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/40 backdrop-blur-sm">
+      <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl max-w-lg w-full max-h-[92dvh] sm:max-h-[90vh] overflow-y-auto p-5 sm:p-8 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
         <div className="flex items-start justify-between gap-3 mb-4 sm:mb-6">
           <div>
             <h2 className="text-xl sm:text-2xl font-serif font-bold text-slate-800">

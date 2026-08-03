@@ -227,17 +227,17 @@ export default function Home() {
       <Hero onShareClick={handleShareClick} />
       <TagFilters onTagChange={setActiveTag as any} />
 
-      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pb-16">
-        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2 mb-6 sm:mb-8 px-1">
-          <div>
-            <h2 className="font-serif text-2xl sm:text-3xl font-bold text-foreground">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pb-16 pb-[max(1rem,env(safe-area-inset-bottom))]">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between sm:gap-4 mb-5 sm:mb-8">
+          <div className="min-w-0">
+            <h2 className="font-serif text-xl sm:text-2xl md:text-3xl font-bold text-foreground">
               Galeria de status
             </h2>
-            <p className="text-gray-600 text-sm sm:text-base mt-1 max-w-xl">
+            <p className="text-gray-600 text-sm sm:text-base mt-1 max-w-xl text-pretty">
               Toca em «Partilhar» para gerar a imagem do cartão e enviar no WhatsApp.
             </p>
           </div>
-          <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-stone-100 px-3 py-1.5 text-xs font-medium text-slate-600">
+          <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-stone-100 px-3 py-1.5 text-xs font-medium text-slate-600 shrink-0">
             <span aria-hidden="true">🖼️</span>
             Cartão minimal
           </span>
@@ -246,10 +246,14 @@ export default function Home() {
           <div className="text-center py-12">
             <p className="text-gray-500">Carregando...</p>
           </div>
+        ) : filteredPosts.length === 0 ? (
+          <div className="text-center py-12 px-4 rounded-2xl border border-dashed border-stone-200 bg-white/60">
+            <p className="text-gray-600 text-sm sm:text-base">Nenhum status nesta categoria.</p>
+          </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-5 lg:gap-6">
             {filteredPosts.map((post) => (
-              <div key={post.id} className="break-inside-avoid">
+              <div key={post.id} className="min-w-0 max-w-full overflow-hidden">
                 <PostCard post={post} onReactionUpdate={handleReactionUpdate} />
               </div>
             ))}

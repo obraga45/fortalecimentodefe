@@ -411,10 +411,10 @@ export default function PostCard({ post, onReactionUpdate }: PostCardProps) {
   };
 
   return (
-    <div>
+    <div className="relative w-full min-w-0 max-w-full">
       <div
         ref={cardRef}
-        className="bg-white rounded-2xl border border-stone-100 shadow-sm p-4 sm:p-5 w-full overflow-hidden"
+        className="bg-white rounded-2xl border border-stone-100 shadow-sm p-4 sm:p-5 w-full max-w-full overflow-hidden"
       >
         {/* Header */}
         <div className="flex items-start gap-3 mb-3">
@@ -437,20 +437,18 @@ export default function PostCard({ post, onReactionUpdate }: PostCardProps) {
           />
 
           {/* Author Info */}
-          <div className="flex-1 min-w-0">
+          <div className="flex-1 min-w-0 pr-1">
             <div className="flex flex-col gap-0.5 min-w-0">
-              <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0 min-w-0">
-                <span className="text-slate-800 font-bold truncate text-base">
-                  {post.author_name}
-                </span>
-                <span className="text-slate-400 text-sm">@comunidade</span>
-              </div>
-              <span className="text-slate-400 text-sm">• {post.time_ago}</span>
+              <span className="text-slate-800 font-bold text-[0.9375rem] sm:text-base leading-snug break-words">
+                {post.author_name}
+              </span>
+              <span className="text-slate-400 text-xs sm:text-sm truncate">@comunidade</span>
+              <span className="text-slate-400 text-xs sm:text-sm">• {post.time_ago}</span>
             </div>
           </div>
 
           <div
-            className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl bg-primary text-white text-xl sm:text-2xl flex items-center justify-center shadow-md shrink-0"
+            className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl bg-primary text-white text-lg sm:text-2xl flex items-center justify-center shadow-md shrink-0"
             aria-hidden="true"
           >
             +
@@ -459,7 +457,7 @@ export default function PostCard({ post, onReactionUpdate }: PostCardProps) {
 
         {/* Content */}
         <div className="mb-4">
-          <p className="font-serif text-[1.15rem] sm:text-lg leading-9 sm:leading-relaxed text-slate-800 mb-3 break-words">
+          <p className="font-serif text-base sm:text-lg leading-relaxed sm:leading-relaxed text-slate-800 mb-3 break-words [overflow-wrap:anywhere]">
             {post.content}
           </p>
           <div className="flex flex-wrap items-center gap-2">
@@ -480,36 +478,38 @@ export default function PostCard({ post, onReactionUpdate }: PostCardProps) {
 
         {/* Actions Footer */}
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between pt-3 border-t border-stone-100">
-          {/* Reaction Buttons */}
-          <div className="grid grid-cols-3 sm:flex items-center gap-2 sm:gap-4 w-full sm:w-auto">
+          <div className="grid grid-cols-3 sm:flex items-stretch sm:items-center gap-1 sm:gap-4 w-full sm:w-auto">
             <button
+              type="button"
               onClick={() => handleReaction("amen")}
-              className="flex items-center justify-center sm:justify-start gap-1 text-slate-400 hover:text-green-600 transition-colors min-w-0"
+              className="flex items-center justify-center gap-1.5 text-slate-400 hover:text-green-600 transition-colors min-h-[2.75rem] sm:min-h-0 rounded-lg sm:rounded-none active:bg-stone-50 sm:active:bg-transparent"
             >
               <span className="text-lg sm:text-base shrink-0">🙏</span>
               <span className="text-sm">{reactions.amen}</span>
             </button>
             <button
+              type="button"
               onClick={() => handleReaction("touched")}
-              className="flex items-center justify-center sm:justify-start gap-1 text-slate-400 hover:text-pink-600 transition-colors min-w-0"
+              className="flex items-center justify-center gap-1.5 text-slate-400 hover:text-pink-600 transition-colors min-h-[2.75rem] sm:min-h-0 rounded-lg sm:rounded-none active:bg-stone-50 sm:active:bg-transparent"
             >
               <span className="text-lg sm:text-base shrink-0">🤍</span>
               <span className="text-sm">{reactions.touched}</span>
             </button>
             <button
+              type="button"
               onClick={() => handleReaction("inspired")}
-              className="flex items-center justify-center sm:justify-start gap-1 text-slate-400 hover:text-yellow-600 transition-colors min-w-0"
+              className="flex items-center justify-center gap-1.5 text-slate-400 hover:text-yellow-600 transition-colors min-h-[2.75rem] sm:min-h-0 rounded-lg sm:rounded-none active:bg-stone-50 sm:active:bg-transparent"
             >
               <span className="text-lg sm:text-base shrink-0">✨</span>
               <span className="text-sm">{reactions.inspired}</span>
             </button>
           </div>
 
-          {/* Share Button */}
           <button
+            type="button"
             onClick={handleShare}
             disabled={isSharing}
-            className="flex items-center justify-center sm:justify-start gap-2 text-slate-400 hover:text-primary transition-colors disabled:opacity-50 w-full sm:w-auto py-2 sm:py-0 rounded-xl bg-stone-50 sm:bg-transparent"
+            className="flex items-center justify-center gap-2 text-slate-600 hover:text-primary transition-colors disabled:opacity-50 w-full sm:w-auto min-h-[2.75rem] sm:min-h-0 py-2.5 sm:py-0 rounded-xl bg-stone-50 sm:bg-transparent font-medium text-sm active:bg-stone-100 sm:active:bg-transparent"
           >
             <span className="text-lg sm:text-base" aria-hidden="true">
               📤
@@ -520,12 +520,12 @@ export default function PostCard({ post, onReactionUpdate }: PostCardProps) {
           </button>
         </div>
 
-        <div className="mt-3 pt-2 border-t border-stone-50 text-center text-xs text-slate-300">
+        <div className="mt-3 pt-2 border-t border-stone-50 text-center text-[10px] sm:text-xs text-slate-300 break-all px-2">
           lido em fortalecimentodefe.pt
         </div>
       </div>
 
-      <div className="fixed left-[-200vw] top-0 pointer-events-none" aria-hidden="true">
+      <div className="share-capture-root" aria-hidden="true">
         <div
           ref={tweetShareRef}
           className="relative w-[1200px] min-h-[720px] bg-white px-[72px] pt-[64px] pb-[88px] text-black"
